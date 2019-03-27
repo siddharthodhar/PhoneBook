@@ -7,10 +7,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class ContactDataBasePB extends SQLiteOpenHelper {
 
-    static String dbName = "MyContacts.db";
-    static String tableName = "PersonalContacts";
-    static String columnName = "Name";
-    static String columnNum = "Number";
+    private static String dbName = "MyContacts.db";
+    private static String tableName = "PersonalContacts";
+    private static String columnName = "Name";
+    private static String columnNum = "Number";
 
     private SQLiteDatabase pbdb;
 
@@ -42,7 +42,7 @@ public class ContactDataBasePB extends SQLiteOpenHelper {
     }
 
     public void deleteContact(String number){
-        pbdb.execSQL("DELETE FROM '" + tableName + "' WHERE '" + columnNum +"' = '" + number + "';");
+        pbdb.execSQL("DELETE FROM '" + tableName + "' WHERE " + columnNum +" = '" + number + "';");
     }
 
     @Override

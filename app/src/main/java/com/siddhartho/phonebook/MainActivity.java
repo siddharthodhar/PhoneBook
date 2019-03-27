@@ -10,7 +10,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.math.BigInteger;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
