@@ -70,6 +70,7 @@ public class CallLogScreen extends AppCompatActivity {
                 Intent intent = new Intent(CallLogScreen.this, MainActivity.class);
 
                 startActivity(intent);
+                CallLogScreen.this.finish();
             }
         });
     }

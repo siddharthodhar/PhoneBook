@@ -36,17 +36,17 @@ public class MainActivity extends AppCompatActivity {
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try{
+                try {
                     if (!name.getText().toString().isEmpty() && number.getText().toString().length() == 10 && number.getText().toString().matches("[0-9]+")) {
                         dataBasePB.insertContact(name.getText().toString(), number.getText().toString());
                         name.setText("");
                         number.setText("");
                         Toast.makeText(MainActivity.this, "Saved successfully!", Toast.LENGTH_LONG).show();
-                    } else if(name.getText().toString().isEmpty())
+                    } else if (name.getText().toString().isEmpty())
                         Toast.makeText(MainActivity.this, "Name cannot be empty!", Toast.LENGTH_LONG).show();
                     else
                         Toast.makeText(MainActivity.this, "Invalid number!", Toast.LENGTH_LONG).show();
-                } catch (SQLiteConstraintException e){
+                } catch (SQLiteConstraintException e) {
                     Toast.makeText(MainActivity.this, "Number already saved!", Toast.LENGTH_LONG).show();
                 }
             }

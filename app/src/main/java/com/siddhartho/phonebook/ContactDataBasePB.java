@@ -14,7 +14,7 @@ public class ContactDataBasePB extends SQLiteOpenHelper {
 
     private SQLiteDatabase pbdb;
 
-    public ContactDataBasePB(Context context){
+    public ContactDataBasePB(Context context) {
         super(context, dbName,null,1);
 
         pbdb = getWritableDatabase();
@@ -25,24 +25,24 @@ public class ContactDataBasePB extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS '" + tableName + "' ('" + columnName + "' TEXT, '" + columnNum + "' TEXT PRIMARY KEY);");
     }
 
-    public void insertContact(String name, String number){
+    public void insertContact(String name, String number) {
         pbdb.execSQL("INSERT INTO '" + tableName + "' VALUES ('" + name + "', '" + number + "');");
     }
 
-    public Cursor getAllContacts(){
-        Cursor cursor = pbdb.rawQuery("SELECT * FROM '" + tableName +"';", null);
+    public Cursor getAllContacts() {
+        Cursor cursor = pbdb.rawQuery("SELECT * FROM '" + tableName + "';", null);
 
         return cursor;
     }
 
-    public Cursor getContact(String number){
-        Cursor cursor = pbdb.rawQuery("SELECT * FROM '" + tableName +"' WHERE " + columnNum +" = '" + number + "';", null);
+    public Cursor getContact(String number) {
+        Cursor cursor = pbdb.rawQuery("SELECT * FROM '" + tableName + "' WHERE " + columnNum + " = '" + number + "';", null);
 
         return cursor;
     }
 
-    public void deleteContact(String number){
-        pbdb.execSQL("DELETE FROM '" + tableName + "' WHERE " + columnNum +" = '" + number + "';");
+    public void deleteContact(String number) {
+        pbdb.execSQL("DELETE FROM '" + tableName + "' WHERE " + columnNum + " = '" + number + "';");
     }
 
     @Override
