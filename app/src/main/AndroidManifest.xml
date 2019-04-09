@@ -36,7 +36,8 @@
             android:label="Contact List" />
         <activity
             android:name=".CallLogScreen"
-            android:label="Call Info"></activity>
+            android:label="Call Info"
+            android:theme="@style/DialogTheme" />
     </application>
 
 </manifest>

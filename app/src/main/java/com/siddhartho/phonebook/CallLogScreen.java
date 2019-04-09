@@ -1,7 +1,6 @@
 package com.siddhartho.phonebook;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.provider.CallLog;
@@ -20,6 +19,7 @@ public class CallLogScreen extends AppCompatActivity {
     private static final String TAG = "CallLogScreen";
 
     TextView name;
+    TextView nameLabel;
     TextView number;
     TextView dateTime;
     TextView duration;
@@ -36,42 +36,77 @@ public class CallLogScreen extends AppCompatActivity {
 
         dataBasePB = new ContactDataBasePB(this);
 
-        Button home = (Button) findViewById(R.id.btn_home);
+        Button btn_ok = (Button) findViewById(R.id.btn_ok);
 
         name = (TextView) findViewById(R.id.tv_name);
+        nameLabel = (TextView) findViewById(R.id.tv_label_name);
         number = (TextView) findViewById(R.id.tv_number);
         dateTime = (TextView) findViewById(R.id.tv_callst_time);
         duration = (TextView) findViewById(R.id.tv_call_dur);
 
         if (ContextCompat.checkSelfPermission(CallLogScreen.this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(CallLogScreen.this, new String[] {Manifest.permission.READ_CALL_LOG}, 1);
+            ActivityCompat.requestPermissions(CallLogScreen.this, new String[]{Manifest.permission.READ_CALL_LOG}, 1);
         else {
-            Cursor cursor = CallLogScreen.this.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null,null, null);
+            Cursor cursor = CallLogScreen.this.getContentResolver().query(CallLog.Calls.CONTENT_URI, null, null, null, null);
             Cursor curdb;
 
             while (cursor.moveToNext()) {
                 NUMBER = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));
 
-                dateTime.setText(new Date(Long.valueOf(cursor.getString(cursor.getColumnIndex(CallLog.Calls.DATE)))).toString());
-                duration.setText(cursor.getString(cursor.getColumnIndex(CallLog.Calls.DURATION)));
+                dateTime.setText(new Date(Long.valueOf(cursor.getString(cursor.getColumnIndex(CallLog.Calls.DATE)))).toString().replace("GMT+05:30", ""));
+                duration.setText(getDurationFormat(cursor.getString(cursor.getColumnIndex(CallLog.Calls.DURATION))));
             }
             cursor.close();
 
             curdb = dataBasePB.getContact(NUMBER);
-            if (curdb.moveToFirst()){
+            if (curdb.moveToFirst()) {
+                if (curdb.getString(0).equals("")) {
+                    nameLabel.setText("");
+                } else {
                     name.setText(curdb.getString(0));
-                    number.setText(curdb.getString(1));
+                }
             }
+            number.setText(NUMBER);
         }
 
-        home.setOnClickListener(new View.OnClickListener() {
+        btn_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(CallLogScreen.this, MainActivity.class);
-
-                startActivity(intent);
                 CallLogScreen.this.finish();
             }
         });
+    }
+
+    private String getDurationFormat(String duration) {
+        String time = "";
+        int hr;
+        String hr_s;
+        int min;
+        String min_s;
+        int sec;
+        String sec_s;
+
+        int dur = Integer.parseInt(duration);
+        hr = dur / 3600;
+        min = (dur % 3600) / 60;
+        sec = (dur % 3600) % 60;
+
+        if (hr / 10 == 0)
+            hr_s = "0" + String.valueOf(hr);
+        else
+            hr_s = String.valueOf(hr);
+
+        if (min / 10 == 0)
+            min_s = "0" + String.valueOf(min);
+        else
+            min_s = String.valueOf(min);
+
+        if (sec / 10 == 0)
+            sec_s = "0" + String.valueOf(sec);
+        else
+            sec_s = String.valueOf(sec);
+
+        time = hr_s + ":" + min_s + ":" + sec_s;
+        return time;
     }
 }

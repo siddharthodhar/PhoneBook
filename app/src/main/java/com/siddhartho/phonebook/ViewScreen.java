@@ -14,16 +14,13 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.telephony.SmsManager;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,11 +29,13 @@ import java.util.ArrayList;
 public class ViewScreen extends AppCompatActivity {
     private static final String TAG = "ViewScreen";
 
-    ListView listView;
-
-    boolean isDeleted;
+    RecyclerView recyclerView;
 
     ContactDataBasePB dataBasePB;
+    MyRecyclerViewAdapter myRecyclerViewAdapter;
+
+    ArrayList<String> namearr;
+    ArrayList<String> numarr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +43,12 @@ public class ViewScreen extends AppCompatActivity {
         setContentView(R.layout.activity_view_main);
         Log.d(TAG, "onCreate: success");
 
-        listView = (ListView) findViewById(R.id.listViewId);
+        recyclerView = (RecyclerView) findViewById(R.id.rec_view_id);
 
         dataBasePB = new ContactDataBasePB(this);
 
-        final ArrayList<String> namearr = new ArrayList<String>();
-        final ArrayList<String> numarr = new ArrayList<String>();
+        namearr = new ArrayList<String>();
+        numarr = new ArrayList<String>();
 
         Cursor cursor = dataBasePB.getAllContacts();
         if (cursor.moveToFirst()) {
@@ -87,17 +86,15 @@ public class ViewScreen extends AppCompatActivity {
             }
         });
 
-        MyAdapterClass myAdapterClass = new MyAdapterClass(namearr, numarr, listener, sms_listener);
-
-        listView.setAdapter(myAdapterClass);
-        listView.setLongClickable(true);
-
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        myRecyclerViewAdapter = new MyRecyclerViewAdapter(namearr, numarr, listener, sms_listener, new MyRecyclerViewAdapter.OnLongClickContactListener() {
             @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                return delAlert(numarr.get(position), dataBasePB);
+            public void onlongClickContact(int position) {
+                delAlert(numarr.get(position), dataBasePB);
             }
         });
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        recyclerView.setAdapter(myRecyclerViewAdapter);
     }
 
     private void sendSms(String number, String message) {
@@ -140,7 +137,7 @@ public class ViewScreen extends AppCompatActivity {
         builder.show();
     }
 
-    private boolean delAlert(final String number, final ContactDataBasePB dataBasePB) {
+    private void delAlert(final String number, final ContactDataBasePB dataBasePB) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ViewScreen.this);
         builder.setTitle("Warning!");
 
@@ -158,7 +155,6 @@ public class ViewScreen extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dataBasePB.deleteContact(number);
-                isDeleted = true;
                 recreate();
                 Toast.makeText(ViewScreen.this, "Deleted successfully!", Toast.LENGTH_LONG).show();
             }
@@ -167,61 +163,9 @@ public class ViewScreen extends AppCompatActivity {
         builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                isDeleted = false;
+                dialog.cancel();
             }
         });
         builder.show();
-        return isDeleted;
-    }
-
-    class MyAdapterClass extends BaseAdapter {
-
-        ArrayList<String> namearr = new ArrayList<String>();
-        ArrayList<String> numarr = new ArrayList<String>();
-        View.OnClickListener listener;
-        View.OnClickListener sms_listener;
-
-        public MyAdapterClass(ArrayList<String> namearr, ArrayList<String> numarr, View.OnClickListener listener, View.OnClickListener sms_listener) {
-            this.namearr = namearr;
-            this.numarr = numarr;
-            this.listener = listener;
-            this.sms_listener = sms_listener;
-        }
-
-        @Override
-        public int getCount() {
-            return namearr.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return null;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            convertView = getLayoutInflater().inflate(R.layout.activity_custom_item, null);
-
-            TextView name = (TextView) convertView.findViewById(R.id.textView_name);
-            TextView number = (TextView) convertView.findViewById(R.id.textView_number);
-            Button call = (Button) convertView.findViewById(R.id.btn_call);
-            Button sendsms = (Button) convertView.findViewById(R.id.btn_sms);
-
-            name.setText(namearr.get(position));
-            number.setText(numarr.get(position));
-
-            call.setTag(numarr.get(position));
-            call.setOnClickListener(listener);
-
-            sendsms.setTag(numarr.get(position));
-            sendsms.setOnClickListener(sms_listener);
-
-            return convertView;
-        }
     }
 }
