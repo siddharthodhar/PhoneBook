@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="10"
+    tools:context=".activities.AddContactsActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_add_contact"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        app:navigationIcon="@drawable/back_icon"
+        app:title="@string/add_contact_title"
+        app:titleTextColor="@android:color/white" />
+
+    <AutoCompleteTextView
+        android:id="@+id/auto_complete_text_view_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="30dp"
+        android:completionHint="@string/contact_name_exist"
+        android:dropDownWidth="wrap_content"
+        android:dropDownHeight="wrap_content"
+        android:fontFamily="@font/raleway_medium"
+        android:hint="@string/name"
+        android:inputType="textPersonName|textCapWords"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="@android:color/black"
+        android:textSize="30sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_number"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="30dp"
+        android:layout_weight="9.9" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.1">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/btn_submit"
+            android:layout_marginEnd="15dp"
+            android:layout_toStartOf="@+id/btn_submit"
+            android:background="@drawable/button_gradient_green"
+            android:fontFamily="@font/raleway_medium"
+            android:padding="10dp"
+            android:text="@android:string/cancel"
+            android:textColor="@color/colorWhite"
+            android:textSize="20sp" />
+
+        <Button
+            android:id="@+id/btn_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/button_gradient_green"
+            android:fontFamily="@font/raleway_medium"
+            android:padding="10dp"
+            android:text="@string/save"
+            android:textColor="@color/colorWhite"
+            android:textSize="20sp" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/developer_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="10dp"
+        android:fontFamily="@font/lato_thin_italic"
+        android:text="@string/developed_by"
+        android:textColor="@color/colorGrey" />
+</LinearLayout>

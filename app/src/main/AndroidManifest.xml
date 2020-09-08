@@ -2,13 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.siddhartho.phonebook">
 
-    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
+        android:name=".application.PhoneBookApplication"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
@@ -16,28 +17,26 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".activities.DisplayContactsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <receiver android:name=".MyBroadCastReceiver">
+        <receiver android:name=".utils.ContactsBroadcastReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
 
         <activity
-            android:name=".ViewScreen"
-            android:label="Contact List" />
-        <activity
-            android:name=".CallLogScreen"
-            android:label="Call Info"
-            android:theme="@style/DialogTheme" />
-    </application>
+            android:name=".activities.AddContactsActivity"
+            android:label="Add Contacts"
+            android:parentActivityName=".activities.DisplayContactsActivity" />
 
+        <service android:name=".utils.ShowCallLogService" />
+    </application>
 </manifest>

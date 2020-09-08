@@ -1,3 +1,35 @@
 <resources>
-    <string name="app_name">PhoneBook</string>
+    <string name="app_name">Phone Book</string>
+    <string name="add_contact_title">Add Contact</string>
+    <string name="name">NAME</string>
+    <string name="country_code">CC</string>
+    <string name="number">NUMBER</string>
+    <string name="save">SAVE</string>
+    <string name="call">CALL</string>
+    <string name="sms">SMS</string>
+    <string name="ok">OK</string>
+    <string name="delete">Delete</string>
+    <string name="contact_name_exist">Contact name(s) exists!</string>
+    <string name="call_log">NAME: %1$s, NUMBER: %2$s, CALL TIME: %3$s, CALL DURATION: %4$s</string>
+    <string name="developed_by">Developed By:- SIDDHARTHO DHAR</string>
+    <string name="sms_hint">"Type your message here…"</string>
+    <string name="char_count">%1$d/160</string>
+
+    <string name="dialog_key">dialog_key</string>
+    <string name="contact_number_image_button_key">contact_number_image_button_key</string>
+    <string name="for_call_boolean_image_button_key">for_call_boolean_image_button_key</string>
+
+    <!--    toast message-->
+    <string name="error_while_entering_number">Something went wrong, type again!</string>
+    <string name="error_while_deleting_number">Something went wrong while deleting number!</string>
+    <string name="error_try_again">Something went wrong, please try again!</string>
+    <string name="error_loading_contact">Error occurred while loading contact details!</string>
+    <string name="error_loading_number">Error occurred while loading contact number!</string>
+    <string name="save_successful">Saved successfully!</string>
+    <string name="delete_successful">Deleted successfully!</string>
+    <string name="sent_message">Message Sent!</string>
+    <string name="empty_field">Field is empty!</string>
+    <string name="mandatory_field">At-least one number is mandatory!</string>
+    <string name="invalid_field">Invalid fields, please check name or number(s)!</string>
+    <string name="exit">Tap again to exit!</string>
 </resources>

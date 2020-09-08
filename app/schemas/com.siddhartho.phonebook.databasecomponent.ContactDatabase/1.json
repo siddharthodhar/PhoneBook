@@ -1,0 +1,136 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "43483eac247cdbe4b8255ba2a55a955f",
+    "entities": [
+      {
+        "tableName": "contact_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_contactId` INTEGER PRIMARY KEY AUTOINCREMENT, `_name` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "_contactId",
+            "columnName": "_contactId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_name",
+            "columnName": "_name",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "_contactId"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "contact_number_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_contactNumberId` INTEGER PRIMARY KEY AUTOINCREMENT, `_contactOwnerId` INTEGER, `_countryCode` TEXT, `_number` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "_contactNumberId",
+            "columnName": "_contactNumberId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_contactOwnerId",
+            "columnName": "_contactOwnerId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_countryCode",
+            "columnName": "_countryCode",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_number",
+            "columnName": "_number",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "_contactNumberId"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "call_logs_count_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_countId` INTEGER PRIMARY KEY AUTOINCREMENT, `_count` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "_countId",
+            "columnName": "_countId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_count",
+            "columnName": "_count",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "_countId"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "notification_id_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_notificationAutoId` INTEGER PRIMARY KEY AUTOINCREMENT, `_notificationId` INTEGER, `_number` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "_notificationAutoId",
+            "columnName": "_notificationAutoId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_notificationId",
+            "columnName": "_notificationId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "_number",
+            "columnName": "_number",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "_notificationAutoId"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '43483eac247cdbe4b8255ba2a55a955f')"
+    ]
+  }
+}
