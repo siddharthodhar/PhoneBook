@@ -1,16 +1,19 @@
-package com.siddhartho.phonebook.databasecomponent;
+package com.siddhartho.phonebook.viewmodel.repository.databasecomponent;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.siddhartho.phonebook.repository.ContactsDataSource;
+import com.siddhartho.phonebook.viewmodel.repository.ContactsDataSource;
 import com.siddhartho.phonebook.viewmodel.ContactsViewModel;
+
+import javax.inject.Inject;
 
 public class ContactsViewModelFactory implements ViewModelProvider.Factory {
 
     private final ContactsDataSource contactsDataSource;
 
+    @Inject
     public ContactsViewModelFactory(ContactsDataSource contactsDataSource) {
         this.contactsDataSource = contactsDataSource;
     }
@@ -21,6 +24,6 @@ public class ContactsViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(ContactsViewModel.class)) {
             //noinspection unchecked
             return (T) new ContactsViewModel(contactsDataSource);
-        } else throw new IllegalArgumentException("unknown view model class");
+        } else throw new IllegalArgumentException("unknown view model class = " + modelClass);
     }
 }

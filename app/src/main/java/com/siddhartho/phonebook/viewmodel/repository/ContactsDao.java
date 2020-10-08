@@ -1,4 +1,4 @@
-package com.siddhartho.phonebook.repository;
+package com.siddhartho.phonebook.viewmodel.repository;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -41,8 +41,11 @@ public interface ContactsDao {
     Flowable<List<ContactWithContactNumbers>> getAllContacts();
 
     @Transaction
-    @Query("SELECT * FROM contact_table WHERE _contactId = (SELECT _contactOwnerId FROM contact_number_table WHERE _number = :number)")
-    Maybe<ContactWithContactNumbers> getContact(String number);
+    @Query("SELECT * FROM contact_table WHERE _contactId = " +
+            "(SELECT CASE WHEN :countryCode = '' OR EXISTS(SELECT _contactNumberId FROM contact_number_table WHERE _number = :number AND _countryCode = '')" +
+            " THEN (SELECT _contactId FROM contact_table WHERE _contactId = (SELECT _contactOwnerId FROM contact_number_table WHERE _number = :number))" +
+            " ELSE (SELECT _contactId FROM contact_table WHERE _contactId = (SELECT _contactOwnerId FROM contact_number_table WHERE _number = :number AND _countryCode = :countryCode)) END)")
+    Maybe<ContactWithContactNumbers> getContact(String countryCode, String number);
 
     @Query("SELECT _name FROM contact_table WHERE _name LIKE :name")
     Flowable<List<String>> getContactNames(String name);

@@ -1,4 +1,4 @@
-package com.siddhartho.phonebook.adapters;
+package com.siddhartho.phonebook.activities.displaycontacts.recyclerview;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,6 +10,7 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.LinearLayout;
 
+import com.siddhartho.phonebook.activities.ActivityScope;
 import com.siddhartho.phonebook.databinding.CustomItemContactBinding;
 import com.siddhartho.phonebook.dataclass.ContactNumber;
 import com.siddhartho.phonebook.dataclass.ContactWithContactNumbers;
@@ -18,6 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
+
+@ActivityScope
 public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRecyclerViewAdapter.MyContactsViewHolder> implements Filterable {
     private static final String TAG = "ContactsRVAdapter";
 
@@ -26,6 +30,7 @@ public class ContactsRecyclerViewAdapter extends RecyclerView.Adapter<ContactsRe
     private final List<ContactWithContactNumbers> contacts, fullContacts;
     private final int EXTRA_VIEWS = 2;
 
+    @Inject
     public ContactsRecyclerViewAdapter() {
         contacts = new ArrayList<>();
         fullContacts = new ArrayList<>();

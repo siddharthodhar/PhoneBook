@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:weightSum="2"
-    tools:context=".activities.AddContactsActivity">
+    tools:context=".activities.addcontact.AddContactActivity">
 
     <LinearLayout
         android:layout_width="0dp"

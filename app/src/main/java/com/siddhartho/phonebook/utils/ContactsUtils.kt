@@ -18,14 +18,11 @@ import kotlin.collections.HashMap
 private const val TAG = "Utils"
 
 fun Context.showToast(
-    message: String,
+    resId: Int,
     duration: Int = Toast.LENGTH_SHORT
 ) {
-    Log.d(
-        TAG,
-        "showToast() called with: message = [$message], duration = [$duration]"
-    )
-    Toast.makeText(this, message, duration).show()
+    Log.d(TAG, "showToast() called with: resId = $resId, duration = $duration")
+    Toast.makeText(this, resId, duration).show()
 }
 
 fun Context.callThroughIntent(number: String) {
@@ -120,4 +117,7 @@ object Constants {
     const val CALL_TYPE = "call_type"
     const val FOR_CALL_LOG = "for_call_log"
     const val FOR_REMOVE_NOTIFICATION = "for_remove_notification"
+    const val MISSED_CALL_CHANNEL_ID_KEY = "MissedCallChannelIdKey"
+    const val MISSED_CALL_CHANNEL_NAME_KEY = "MissedCallChannelNameKey"
+    const val MISSED_CALL_CHANNEL_DESC_KEY = "MissedCallChannelDescKey"
 }

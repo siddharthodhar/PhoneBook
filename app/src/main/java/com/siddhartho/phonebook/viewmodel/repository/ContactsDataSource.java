@@ -1,4 +1,4 @@
-package com.siddhartho.phonebook.repository;
+package com.siddhartho.phonebook.viewmodel.repository;
 
 import com.siddhartho.phonebook.dataclass.CallLogsCount;
 import com.siddhartho.phonebook.dataclass.Contact;
@@ -17,7 +17,7 @@ public interface ContactsDataSource {
 
     Flowable<List<ContactWithContactNumbers>> getAllContacts();
 
-    Maybe<ContactWithContactNumbers> getContact(String number);
+    Maybe<ContactWithContactNumbers> getContact(String countryCode, String number);
 
     Flowable<List<String>> getContactNames(String name);
 

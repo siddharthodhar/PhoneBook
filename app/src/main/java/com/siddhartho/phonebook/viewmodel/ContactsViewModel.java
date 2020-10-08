@@ -8,9 +8,12 @@ import com.siddhartho.phonebook.dataclass.CallLogsCount;
 import com.siddhartho.phonebook.dataclass.ContactNumber;
 import com.siddhartho.phonebook.dataclass.ContactWithContactNumbers;
 import com.siddhartho.phonebook.dataclass.NotificationId;
-import com.siddhartho.phonebook.repository.ContactsDataSource;
+import com.siddhartho.phonebook.viewmodel.repository.ContactsDataSource;
 
 import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
@@ -21,22 +24,17 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
+@Singleton
 public class ContactsViewModel extends ViewModel {
     private static final String TAG = "ContactsViewModel";
 
     private final ContactsDataSource contactsDataSource;
-    private static ContactsViewModel mInstance;
 
     private final CompositeDisposable disposables = new CompositeDisposable();
 
+    @Inject
     public ContactsViewModel(ContactsDataSource contactsDataSource) {
         this.contactsDataSource = contactsDataSource;
-    }
-
-    public static synchronized ContactsViewModel getInstance(ContactsDataSource contactsDataSource) {
-        if (mInstance == null)
-            mInstance = new ContactsViewModel(contactsDataSource);
-        return mInstance;
     }
 
     public Flowable<List<ContactWithContactNumbers>> getAllContacts() {
@@ -44,9 +42,9 @@ public class ContactsViewModel extends ViewModel {
         return contactsDataSource.getAllContacts();
     }
 
-    public Maybe<ContactWithContactNumbers> getContact(String number) {
-        Log.d(TAG, "getContact() called with: number = [" + number + "]");
-        return contactsDataSource.getContact(number);
+    public Maybe<ContactWithContactNumbers> getContact(String countryCode, String number) {
+        Log.d(TAG, "getContact() called with: countryCode = [" + countryCode + "], number = [" + number + "]");
+        return contactsDataSource.getContact(countryCode, number);
     }
 
     public Flowable<List<String>> getContactNames(String name) {

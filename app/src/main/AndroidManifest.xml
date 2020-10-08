@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
-        android:name=".application.PhoneBookApplication"
+        android:name=".PhoneBookApplication"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
@@ -17,27 +17,26 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activities.DisplayContactsActivity">
+        <activity android:name=".activities.displaycontacts.DisplayContactsActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-                <action android:name="android.intent.action.VIEW"/>
             </intent-filter>
         </activity>
 
-        <receiver android:name=".utils.ContactsBroadcastReceiver">
+        <receiver android:name=".broadcastreceiver.ContactsBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
 
         <activity
-            android:name=".activities.AddContactsActivity"
+            android:name="com.siddhartho.phonebook.activities.addcontact.AddContactActivity"
             android:label="Add Contacts"
-            android:parentActivityName=".activities.DisplayContactsActivity" />
+            android:parentActivityName=".activities.displaycontacts.DisplayContactsActivity" />
 
-        <service android:name=".utils.ShowCallLogService" />
+        <service android:name=".services.showcalllog.ShowCallLogService" />
     </application>
 </manifest>

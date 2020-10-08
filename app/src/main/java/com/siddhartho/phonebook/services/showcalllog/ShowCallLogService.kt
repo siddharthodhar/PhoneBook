@@ -1,9 +1,8 @@
-package com.siddhartho.phonebook.utils
+package com.siddhartho.phonebook.services.showcalllog
 
 import android.app.Dialog
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -19,14 +18,16 @@ import android.widget.LinearLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.siddhartho.phonebook.R
-import com.siddhartho.phonebook.activities.DisplayContactsActivity
-import com.siddhartho.phonebook.application.PhoneBookApplication
+import com.siddhartho.phonebook.activities.displaycontacts.DisplayContactsActivity
 import com.siddhartho.phonebook.databinding.CallLogScreenBinding
 import com.siddhartho.phonebook.dataclass.CallLogsCount
 import com.siddhartho.phonebook.dataclass.ContactWithContactNumbers
 import com.siddhartho.phonebook.dataclass.NotificationId
-import com.siddhartho.phonebook.repository.ContactsRepository
+import com.siddhartho.phonebook.utils.Constants
+import com.siddhartho.phonebook.utils.ContentResolverForCallLog
+import com.siddhartho.phonebook.utils.callThroughIntent
 import com.siddhartho.phonebook.viewmodel.ContactsViewModel
+import dagger.android.DaggerService
 import io.reactivex.Completable
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
@@ -34,22 +35,20 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Named
 
-class ShowCallLogService : Service() {
+class ShowCallLogService : DaggerService() {
 
-    private var contactsViewModel: ContactsViewModel? = null
-    private val disposables =
-        CompositeDisposable()
+    @Inject
+    lateinit var contactsViewModel: ContactsViewModel
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.d(TAG, "onCreate() called")
-        contactsViewModel = ContactsViewModel.getInstance(
-            ContactsRepository(
-                this
-            )
-        )
-    }
+    @Inject
+    lateinit var disposables: CompositeDisposable
+
+    @Inject
+    @field:[Named(Constants.MISSED_CALL_CHANNEL_ID_KEY)]
+    lateinit var missedCallChannelId: String
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(
@@ -63,7 +62,7 @@ class ShowCallLogService : Service() {
 
         intent?.getBooleanExtra(Constants.FOR_REMOVE_NOTIFICATION, false)?.let {
             if (it) {
-                contactsViewModel?.getNotificationId(intent.getStringExtra(Constants.CONTACT_NUMBER))
+                contactsViewModel.getNotificationId(intent.getStringExtra(Constants.CONTACT_NUMBER))
                     ?.subscribeOn(Schedulers.io())
                     ?.observeOn(AndroidSchedulers.mainThread())
                     ?.flatMapCompletable { notificationId ->
@@ -75,7 +74,7 @@ class ShowCallLogService : Service() {
                         val notificationManager =
                             getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                         notificationManager.cancel(notificationId.notificationId!!)
-                        contactsViewModel?.deleteNotificationIds(intent.getStringExtra(Constants.CONTACT_NUMBER))
+                        contactsViewModel.deleteNotificationIds(intent.getStringExtra(Constants.CONTACT_NUMBER))
                             ?.subscribeOn(Schedulers.io())
                             ?.observeOn(AndroidSchedulers.mainThread())
                     }
@@ -94,7 +93,7 @@ class ShowCallLogService : Service() {
         }
 
         intent?.getStringExtra(Constants.CONTACT_NUMBER)?.let { number ->
-            contactsViewModel?.deleteNotificationIds(number)
+            contactsViewModel.deleteNotificationIds(number)
                 ?.subscribeOn(Schedulers.io())
                 ?.observeOn(AndroidSchedulers.mainThread())
                 ?.subscribe({
@@ -123,7 +122,7 @@ class ShowCallLogService : Service() {
                 .subscribe {
                     run {
                         ContentResolverForCallLog.setCursor(contentResolver)
-                            .andThen(contactsViewModel?.callLogsCount)
+                            .andThen(contactsViewModel.callLogsCount)
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .flatMap {
@@ -159,7 +158,7 @@ class ShowCallLogService : Service() {
                                     TAG,
                                     "fetchLastCallLog() called with: cellPhoneCallLogsCount = $cellPhoneCallLogsCount for insertOrUpdateCallLogsCount"
                                 )
-                                contactsViewModel?.insertOrUpdateCallLogsCount(
+                                contactsViewModel.insertOrUpdateCallLogsCount(
                                     CallLogsCount(
                                         cellPhoneCallLogsCount
                                     )
@@ -173,7 +172,10 @@ class ShowCallLogService : Service() {
                             ?.flatMapMaybe {
                                 Log.d(TAG, "fetchLastCallLog: call log details = $it")
                                 callLogDetails = it as HashMap<String, String>
-                                contactsViewModel?.getContact(getTenDigitNumber(it[Constants.CONTACT_NUMBER]))
+                                contactsViewModel.getContact(
+                                    getCountryCode(it[Constants.CONTACT_NUMBER]),
+                                    getTenDigitNumber(it[Constants.CONTACT_NUMBER])
+                                )
                                     ?.subscribeOn(Schedulers.io())
                                     ?.observeOn(AndroidSchedulers.mainThread())
                             }
@@ -225,8 +227,8 @@ class ShowCallLogService : Service() {
                 )?.number
             }"
 
-        contactsViewModel?.insertNotificationId(NotificationId(notificationId, numberWithCC))
-            ?.andThen(contactsViewModel?.getMissedCount(numberWithCC))
+        contactsViewModel.insertNotificationId(NotificationId(notificationId, numberWithCC))
+            ?.andThen(contactsViewModel.getMissedCount(numberWithCC))
             ?.subscribeOn(Schedulers.io())
             ?.observeOn(AndroidSchedulers.mainThread())
             ?.subscribe({
@@ -234,7 +236,7 @@ class ShowCallLogService : Service() {
                 val notificationGroup =
                     NotificationCompat.Builder(
                         this,
-                        PhoneBookApplication.getMissedCallChannelId(this)
+                        missedCallChannelId
                     )
                         .setSmallIcon(R.mipmap.ic_launcher_foreground)
                         .setStyle(NotificationCompat.InboxStyle().setSummaryText("Missed calls"))
@@ -245,7 +247,7 @@ class ShowCallLogService : Service() {
                 val notification =
                     NotificationCompat.Builder(
                         this,
-                        PhoneBookApplication.getMissedCallChannelId(this)
+                        missedCallChannelId
                     )
                         .setSmallIcon(R.mipmap.ic_launcher_foreground)
                         .setContentTitle(
@@ -384,6 +386,16 @@ class ShowCallLogService : Service() {
         number?.let {
             if (number.length >= 10)
                 result = number.substring(number.length - 10)
+        }
+        return result
+    }
+
+    private fun getCountryCode(number: String?): String {
+        Log.d(TAG, "getCountryCode() called with: number = $number")
+        var result = ""
+        number?.let {
+            if (number.length >= 10)
+                result = number.substring(0, number.length - 10)
         }
         return result
     }

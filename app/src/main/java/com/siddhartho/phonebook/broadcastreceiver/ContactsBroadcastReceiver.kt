@@ -1,14 +1,20 @@
-package com.siddhartho.phonebook.utils
+package com.siddhartho.phonebook.broadcastreceiver
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.TelephonyManager
 import android.util.Log
+import com.siddhartho.phonebook.services.showcalllog.ShowCallLogService
+import com.siddhartho.phonebook.utils.Constants
+import dagger.android.DaggerBroadcastReceiver
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ContactsBroadcastReceiver : BroadcastReceiver() {
+@Singleton
+class ContactsBroadcastReceiver @Inject constructor() : DaggerBroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
         Log.d(TAG, "onReceive() called with: context = $context, intent = $intent")
         if (intent.action.equals("android.intent.action.PHONE_STATE")) {
             val state: String? = intent.getStringExtra(TelephonyManager.EXTRA_STATE)

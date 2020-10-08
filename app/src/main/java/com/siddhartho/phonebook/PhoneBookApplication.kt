@@ -1,28 +1,30 @@
-package com.siddhartho.phonebook.application
+package com.siddhartho.phonebook
 
-import android.app.Application
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
 import android.provider.Settings
 import android.util.Log
+import com.siddhartho.phonebook.utils.Constants
+import dagger.android.AndroidInjector
+import dagger.android.support.DaggerApplication
+import javax.inject.Inject
+import javax.inject.Named
 
-class PhoneBookApplication : Application() {
+class PhoneBookApplication : DaggerApplication() {
+
+    @Inject
+    @field:[Named(Constants.MISSED_CALL_CHANNEL_DESC_KEY)]
+    lateinit var missedCallChannelDesc: String
+
+    @Inject
+    lateinit var missedCallChannel: NotificationChannel
 
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "onCreate() called")
 
-        val missedCallChannelName = "Missed Call Alert"
-        val missedCallChannelDesc = "Get a notification for missed call"
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val missedCallChannel =
-                NotificationChannel(
-                    getMissedCallChannelId(this),
-                    missedCallChannelName,
-                    NotificationManager.IMPORTANCE_HIGH
-                )
             missedCallChannel.description = missedCallChannelDesc
             missedCallChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             missedCallChannel.setSound(
@@ -38,12 +40,12 @@ class PhoneBookApplication : Application() {
         }
     }
 
+    override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
+        Log.d(TAG, "applicationInjector() called")
+        return DaggerPhoneBookAppComponent.builder().application(this).build()
+    }
+
     companion object {
         private const val TAG = "PhoneBookApplication"
-
-        fun getMissedCallChannelId(context: Context): String {
-            Log.d(TAG, "getMissedCallChannelId() called with: context = $context")
-            return "${context.packageName}.missed_call_channel"
-        }
     }
 }

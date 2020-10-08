@@ -1,25 +1,23 @@
-package com.siddhartho.phonebook.activities
+package com.siddhartho.phonebook.activities.addcontact
 
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.siddhartho.phonebook.R
-import com.siddhartho.phonebook.adapters.ContactNumbersRecyclerViewAdapter
-import com.siddhartho.phonebook.databasecomponent.ContactsViewModelFactory
+import com.siddhartho.phonebook.activities.addcontact.recyclerview.ContactNumbersRecyclerViewAdapter
+import com.siddhartho.phonebook.viewmodel.repository.databasecomponent.ContactsViewModelFactory
 import com.siddhartho.phonebook.databinding.ActivityAddContactsBinding
-import com.siddhartho.phonebook.dataclass.Contact
 import com.siddhartho.phonebook.dataclass.ContactNumber
 import com.siddhartho.phonebook.dataclass.ContactWithContactNumbers
-import com.siddhartho.phonebook.repository.ContactsRepository
 import com.siddhartho.phonebook.utils.Constants
 import com.siddhartho.phonebook.utils.showToast
 import com.siddhartho.phonebook.viewmodel.ContactsViewModel
+import dagger.android.support.DaggerAppCompatActivity
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Observable
@@ -27,24 +25,28 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class AddContactsActivity : AppCompatActivity() {
+class AddContactActivity : DaggerAppCompatActivity() {
+
     private var activityAddContactsBinding: ActivityAddContactsBinding? =
         null
     private var contactsViewModel: ContactsViewModel? = null
-    private var contactWithContactNumbers: ContactWithContactNumbers? =
-        ContactWithContactNumbers(
-            Contact(""),
-            arrayListOf(ContactNumber(null, Constants.DEFAULT_CC, ""))
-        )
-    private val contactNumbersToDelete: ArrayList<ContactNumber>? = ArrayList()
-    private val contactNumbersRecyclerViewAdapter = ContactNumbersRecyclerViewAdapter(
-        onCountryCodeClicked = ::onCountryCodeClicked,
-        onNumberClicked = ::onNumberClicked,
-        onDeleteClicked = ::onDeleteClicked
-    )
-    private val disposables =
-        CompositeDisposable()
+
+    @Inject
+    lateinit var contactsViewModelFactory: ContactsViewModelFactory
+
+    @Inject
+    lateinit var contactWithContactNumbers: ContactWithContactNumbers
+
+    @Inject
+    lateinit var contactNumbersToDelete: ArrayList<ContactNumber>
+
+    @Inject
+    lateinit var contactNumbersRecyclerViewAdapter: ContactNumbersRecyclerViewAdapter
+
+    @Inject
+    lateinit var disposables: CompositeDisposable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,14 +60,7 @@ class AddContactsActivity : AppCompatActivity() {
             )
         setContentView(activityAddContactsBinding?.root)
         setSupportActionBar(activityAddContactsBinding?.toolbarAddContact)
-        contactsViewModel = ViewModelProvider(
-            this,
-            ContactsViewModelFactory(
-                ContactsRepository(
-                    this
-                )
-            )
-        ).get(
+        contactsViewModel = ViewModelProvider(this, contactsViewModelFactory).get(
             ContactsViewModel::class.java
         )
 
@@ -82,12 +77,12 @@ class AddContactsActivity : AppCompatActivity() {
         super.onStart()
         Log.d(TAG, "onStart() called")
         if (ACTIVITY_STOPPED)
-            contactWithContactNumbers?.contactNumbers?.add(getNewContactNumber())
+            contactWithContactNumbers.contactNumbers?.add(getNewContactNumber())
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         Log.d(TAG, "onSaveInstanceState() called with: outState = $outState")
-        contactWithContactNumbers?.contactNumbers?.remove(getNewContactNumber())
+        contactWithContactNumbers.contactNumbers?.remove(getNewContactNumber())
         outState.putParcelable(CONTACT_BUNDLE_KEY, contactWithContactNumbers)
         super.onSaveInstanceState(outState)
     }
@@ -109,7 +104,7 @@ class AddContactsActivity : AppCompatActivity() {
                     .observeOn(AndroidSchedulers.mainThread())
                     .flatMap {
                         Log.d(TAG, "setObserversAndListeners: editTextName flatMap $it")
-                        contactWithContactNumbers?.contact?.name = it
+                        contactWithContactNumbers.contact?.name = it
                         contactsViewModel?.getContactNames(it)
                             ?.subscribeOn(Schedulers.io())
                             ?.observeOn(AndroidSchedulers.mainThread())
@@ -118,7 +113,7 @@ class AddContactsActivity : AppCompatActivity() {
                         Log.d(TAG, "setObserversAndListeners: getContactNames -> onNext() $it")
                         activityAddContactsBinding?.autoCompleteTextViewName?.setAdapter(
                             ArrayAdapter(
-                                this@AddContactsActivity,
+                                this@AddContactActivity,
                                 android.R.layout.simple_dropdown_item_1line,
                                 it
                             )
@@ -129,7 +124,7 @@ class AddContactsActivity : AppCompatActivity() {
                             "setObserversAndListeners: getContactNames -> onError() ${it.message}",
                             it
                         )
-                        showToast(resources.getString(R.string.error_try_again))
+                        showToast(R.string.error_try_again)
                     })?.let { disposables.add(it) }
             }
 
@@ -159,17 +154,17 @@ class AddContactsActivity : AppCompatActivity() {
             activityAddContactsBinding?.autoCompleteTextViewName?.setSelection(
                 activityAddContactsBinding?.autoCompleteTextViewName?.text.toString().length
             )
-            contactWithContactNumbers?.contact?.name =
+            contactWithContactNumbers.contact?.name =
                 activityAddContactsBinding?.autoCompleteTextViewName?.text.toString()
         }
 
 
         activityAddContactsBinding?.btnSubmit?.setOnClickListener { _ ->
             Log.d(TAG, "setObserversAndListeners: btnSubmit setOnClickListener() called with: _")
-            contactWithContactNumbers?.let {
+            contactWithContactNumbers.let {
                 if (it.isValid()) {
                     if (it.contactNumbers.isNullOrEmpty()) {
-                        showToast(resources.getString(R.string.mandatory_field))
+                        showToast(R.string.mandatory_field)
                         it.contactNumbers?.add(getNewContactNumber())
                     } else
                         insertOrUpdateContactAfterDeletingNumbersIfExist(it)
@@ -180,7 +175,7 @@ class AddContactsActivity : AppCompatActivity() {
                     )
                     DELETE_CLICKED = false
                     showToast(
-                        resources.getString(R.string.invalid_field),
+                        R.string.invalid_field,
                         Toast.LENGTH_LONG
                     )
                 }
@@ -202,25 +197,27 @@ class AddContactsActivity : AppCompatActivity() {
         contactWithContactNumbers?.let {
             Log.d(TAG, "populateContactDetailsToUI() called contact found")
             this.contactWithContactNumbers = it
-            this.contactWithContactNumbers?.contactNumbers?.add(getNewContactNumber())
+            this.contactWithContactNumbers.contactNumbers?.add(getNewContactNumber())
         }
-        activityAddContactsBinding?.autoCompleteTextViewName?.setText(this.contactWithContactNumbers?.contact?.name)
+        activityAddContactsBinding?.autoCompleteTextViewName?.setText(this.contactWithContactNumbers.contact?.name)
         activityAddContactsBinding?.autoCompleteTextViewName?.setSelection(
             activityAddContactsBinding?.autoCompleteTextViewName?.text.toString().length
         )
         activityAddContactsBinding?.recyclerViewNumber?.layoutManager =
             LinearLayoutManager(this, RecyclerView.VERTICAL, false)
+        setListenerAdapter()
         activityAddContactsBinding?.recyclerViewNumber?.adapter =
             contactNumbersRecyclerViewAdapter
+
         contactNumbersRecyclerViewAdapter.resetContactNumberList()
-        Observable.fromIterable(this.contactWithContactNumbers?.contactNumbers)
+        Observable.fromIterable(this.contactWithContactNumbers.contactNumbers)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 Log.d(TAG, "populateContactDetailsToUI() called adding $it to RV")
                 contactNumbersRecyclerViewAdapter.addContactNumber(
                     it,
-                    this.contactWithContactNumbers?.contactNumbers?.indexOf(it)
+                    this.contactWithContactNumbers.contactNumbers?.indexOf(it)
                 )
             }, {
                 Log.e(
@@ -228,7 +225,7 @@ class AddContactsActivity : AppCompatActivity() {
                     "populateContactDetailsToUI: error while adding contactNumber ${it.message}",
                     it
                 )
-                showToast(resources.getString(R.string.error_loading_number))
+                showToast(R.string.error_loading_number)
             })?.let { disposables.add(it) }
     }
 
@@ -263,7 +260,7 @@ class AddContactsActivity : AppCompatActivity() {
                             it
                         )
                         showToast(
-                            resources.getString(R.string.error_while_deleting_number),
+                            R.string.error_while_deleting_number,
                             Toast.LENGTH_LONG
                         )
                     })
@@ -280,7 +277,7 @@ class AddContactsActivity : AppCompatActivity() {
                         TAG,
                         "insertOrUpdateContactAfterDeletingNumbersIfExist: onComplete() called"
                     )
-                    showToast(resources.getString(R.string.save_successful))
+                    showToast(R.string.save_successful)
                     onBackPressed()
                 }, {
                     Log.e(
@@ -288,7 +285,7 @@ class AddContactsActivity : AppCompatActivity() {
                         "insertOrUpdateContactAfterDeletingNumbersIfExist: onError() ${it.message}",
                         it
                     )
-                    showToast(resources.getString(R.string.error_try_again))
+                    showToast(R.string.error_try_again)
                 })
         )
     }
@@ -296,19 +293,19 @@ class AddContactsActivity : AppCompatActivity() {
     private fun addNewContactNumber(position: Int?) {
         Log.d(TAG, "addNewContactNumber() called with: position = $position")
         val newContactNumber = getNewContactNumber()
-        if (position == contactWithContactNumbers?.contactNumbers?.size?.minus(1) && !DELETE_CLICKED) {
-            contactWithContactNumbers?.contactNumbers?.add(
+        if (position == contactWithContactNumbers.contactNumbers?.size?.minus(1) && !DELETE_CLICKED) {
+            contactWithContactNumbers.contactNumbers?.add(
                 newContactNumber
             )
             contactNumbersRecyclerViewAdapter.addContactNumber(
                 newContactNumber,
-                contactWithContactNumbers?.contactNumbers?.size?.minus(1)
+                contactWithContactNumbers.contactNumbers?.size?.minus(1)
             )
         }
     }
 
     private fun getNewContactNumber() = ContactNumber(
-        contactWithContactNumbers?.contact?.contactId,
+        contactWithContactNumbers.contact?.contactId,
         Constants.DEFAULT_CC,
         ""
     )
@@ -316,32 +313,49 @@ class AddContactsActivity : AppCompatActivity() {
     private fun getContactFromIntent(): ContactWithContactNumbers? =
         intent.getParcelableExtra(Constants.CONTACT_WITH_NUMBER_KEY)
 
-    private fun onCountryCodeClicked(
-        editText: EditText,
-        holder: ContactNumbersRecyclerViewAdapter.MyContactNumbersViewHolder
-    ) {
-        Log.d(TAG, "onCountryCodeClicked() called with: editText = $editText, holder = $holder")
-        editText.addTextChangedListener(getCountryCodeTextChangedListener(holder))
-    }
+    private fun setListenerAdapter() {
+        Log.d(TAG, "setListenerAdapter() called")
 
-    private fun onNumberClicked(
-        editText: EditText,
-        holder: ContactNumbersRecyclerViewAdapter.MyContactNumbersViewHolder
-    ) {
-        Log.d(TAG, "onNumberClicked() called with: editText = $editText, position = $holder")
-        editText.addTextChangedListener(getContactNumberTextChangedListener(holder))
+        contactNumbersRecyclerViewAdapter.setOnCountryCodeClickedListeners { editText, myContactNumbersViewHolder ->
+            Log.d(
+                TAG,
+                "setListenerAdapter() called with: editText = $editText, myContactNumbersViewHolder = $myContactNumbersViewHolder"
+            )
+            editText.addTextChangedListener(
+                getCountryCodeTextChangedListener(
+                    myContactNumbersViewHolder
+                )
+            )
+        }
+
+        contactNumbersRecyclerViewAdapter.setOnNumberClickedListeners { editText, myContactNumbersViewHolder ->
+            Log.d(
+                TAG,
+                "setListenerAdapter() called with: editText = $editText, myContactNumbersViewHolder = $myContactNumbersViewHolder"
+            )
+            editText.addTextChangedListener(
+                getContactNumberTextChangedListener(
+                    myContactNumbersViewHolder
+                )
+            )
+        }
+
+        contactNumbersRecyclerViewAdapter.setOnDeleteClickedListeners {
+            Log.d(TAG, "setListenerAdapter() called with: myContactNumbersViewHolder = $it")
+            onDeleteClicked(it)
+        }
     }
 
     private fun onDeleteClicked(holder: ContactNumbersRecyclerViewAdapter.MyContactNumbersViewHolder) {
         Log.d(TAG, "onDeleteClicked() called with: holder = $holder")
-        if (holder.adapterPosition == contactWithContactNumbers?.contactNumbers?.size?.minus(1))
-            showToast(resources.getString(R.string.empty_field))
+        if (holder.adapterPosition == contactWithContactNumbers.contactNumbers?.size?.minus(1))
+            showToast(R.string.empty_field)
         else {
             DELETE_CLICKED = true
-            contactWithContactNumbers?.contactNumbers?.get(holder.adapterPosition)?.let {
-                contactNumbersToDelete?.add(it)
+            contactWithContactNumbers.contactNumbers?.get(holder.adapterPosition)?.let {
+                contactNumbersToDelete.add(it)
             }
-            contactWithContactNumbers?.contactNumbers?.removeAt(holder.adapterPosition)
+            contactWithContactNumbers.contactNumbers?.removeAt(holder.adapterPosition)
             contactNumbersRecyclerViewAdapter.removeContactNumber(
                 holder.adapterPosition
             )
@@ -366,17 +380,34 @@ class AddContactsActivity : AppCompatActivity() {
                 Log.d(TAG, "onTextChanged() called with: p0 = $p0, p1 = $p1, p2 = $p2, p3 = $p3")
                 if (activityAddContactsBinding?.recyclerViewNumber?.scrollState == RecyclerView.SCROLL_STATE_IDLE)
                     Observable.just(p0.toString())
+                        .debounce(3, TimeUnit.SECONDS)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe({
-                            Log.d(TAG, "onCountryCodeClicked onNext() called $it")
+                        .flatMapMaybe {
+                            Log.d(TAG, "onCountryCodeClicked() flatMap: $it")
                             if (it.isNotEmpty())
                                 addNewContactNumber(holder.adapterPosition)
-                            contactWithContactNumbers?.contactNumbers?.get(holder.adapterPosition)?.countryCode =
+                            contactWithContactNumbers.contactNumbers?.get(holder.adapterPosition)?.countryCode =
                                 it
+                            contactsViewModel?.getContact(
+                                it, contactWithContactNumbers.contactNumbers?.get(
+                                    holder.adapterPosition
+                                )?.number
+                            )
+                                ?.subscribeOn(Schedulers.io())
+                                ?.observeOn(AndroidSchedulers.mainThread())
+                        }
+                        .subscribe({
+                            Log.d(
+                                TAG,
+                                "onCountryCodeClicked getContact() -> onNext() called ${it.contact?.name}"
+                            )
+                            it?.let {
+                                populateContactDetailsToUI(it)
+                            }
                         }, {
                             Log.e(TAG, "onCountryCodeClicked onError(): ${it.message}", it)
-                            showToast(resources.getString(R.string.error_while_entering_number))
+                            showToast(R.string.error_while_entering_number)
                         })?.let { d -> disposables.add(d) }
             }
         }
@@ -405,9 +436,13 @@ class AddContactsActivity : AppCompatActivity() {
                             Log.d(TAG, "onNumberClicked() flatMap: $it")
                             if (it.isNotEmpty())
                                 addNewContactNumber(holder.adapterPosition)
-                            contactWithContactNumbers?.contactNumbers?.get(holder.adapterPosition)?.number =
+                            contactWithContactNumbers.contactNumbers?.get(holder.adapterPosition)?.number =
                                 it
-                            contactsViewModel?.getContact(it)
+                            contactsViewModel?.getContact(
+                                contactWithContactNumbers.contactNumbers?.get(
+                                    holder.adapterPosition
+                                )?.countryCode, it
+                            )
                                 ?.subscribeOn(Schedulers.io())
                                 ?.observeOn(AndroidSchedulers.mainThread())
                         }
@@ -425,7 +460,7 @@ class AddContactsActivity : AppCompatActivity() {
                                 "onNumberClicked getContact() -> onError(): ${it.message}",
                                 it
                             )
-                            showToast(resources.getString(R.string.error_while_entering_number))
+                            showToast(R.string.error_while_entering_number)
                         })?.let { d -> disposables.add(d) }
             }
         }

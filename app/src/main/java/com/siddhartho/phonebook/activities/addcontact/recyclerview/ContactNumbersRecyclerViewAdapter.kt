@@ -1,20 +1,23 @@
-package com.siddhartho.phonebook.adapters
+package com.siddhartho.phonebook.activities.addcontact.recyclerview
 
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.recyclerview.widget.RecyclerView
+import com.siddhartho.phonebook.activities.ActivityScope
 import com.siddhartho.phonebook.databinding.CustomItemContactNumberBinding
 import com.siddhartho.phonebook.dataclass.ContactNumber
 import com.siddhartho.phonebook.utils.Constants
+import javax.inject.Inject
 
-class ContactNumbersRecyclerViewAdapter(
-    private val onCountryCodeClicked: (editText: EditText, holder: MyContactNumbersViewHolder) -> Unit,
-    private val onNumberClicked: (editText: EditText, holder: MyContactNumbersViewHolder) -> Unit,
-    private val onDeleteClicked: (holder: MyContactNumbersViewHolder) -> Unit
-) :
+@ActivityScope
+class ContactNumbersRecyclerViewAdapter @Inject constructor() :
     RecyclerView.Adapter<ContactNumbersRecyclerViewAdapter.MyContactNumbersViewHolder>() {
+
+    private lateinit var onCountryCodeClicked: (EditText, MyContactNumbersViewHolder) -> Unit
+    private lateinit var onNumberClicked: (EditText, MyContactNumbersViewHolder) -> Unit
+    private lateinit var onDeleteClicked: (MyContactNumbersViewHolder) -> Unit
 
     private var contactNumbers: ArrayList<ContactNumber>? = ArrayList()
 
@@ -62,6 +65,18 @@ class ContactNumbersRecyclerViewAdapter(
         holder.customItemContactNumberBinding.btnDeleteNumber.setOnClickListener {
             onDeleteClicked(holder)
         }
+    }
+
+    fun setOnCountryCodeClickedListeners(onCountryCodeClicked: (EditText, MyContactNumbersViewHolder) -> Unit) {
+        this.onCountryCodeClicked = onCountryCodeClicked
+    }
+
+    fun setOnNumberClickedListeners(onNumberClicked: (EditText, MyContactNumbersViewHolder) -> Unit) {
+        this.onNumberClicked = onNumberClicked
+    }
+
+    fun setOnDeleteClickedListeners(onDeleteClicked: (MyContactNumbersViewHolder) -> Unit) {
+        this.onDeleteClicked = onDeleteClicked
     }
 
     fun resetContactNumberList() {

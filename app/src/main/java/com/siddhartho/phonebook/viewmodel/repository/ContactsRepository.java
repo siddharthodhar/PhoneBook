@@ -1,9 +1,7 @@
-package com.siddhartho.phonebook.repository;
+package com.siddhartho.phonebook.viewmodel.repository;
 
-import android.content.Context;
 import android.util.Log;
 
-import com.siddhartho.phonebook.databasecomponent.ContactDatabase;
 import com.siddhartho.phonebook.dataclass.CallLogsCount;
 import com.siddhartho.phonebook.dataclass.Contact;
 import com.siddhartho.phonebook.dataclass.ContactNumber;
@@ -23,8 +21,8 @@ public class ContactsRepository implements ContactsDataSource {
 
     private final ContactsDao contactsDao;
 
-    public ContactsRepository(Context context) {
-        contactsDao = ContactDatabase.getInstance(context).contactsDao();
+    public ContactsRepository(ContactsDao contactsDao) {
+        this.contactsDao = contactsDao;
     }
 
     @Override
@@ -34,9 +32,9 @@ public class ContactsRepository implements ContactsDataSource {
     }
 
     @Override
-    public Maybe<ContactWithContactNumbers> getContact(String number) {
-        Log.d(TAG, "getContact() called with: number = [" + number + "]");
-        return contactsDao.getContact(number);
+    public Maybe<ContactWithContactNumbers> getContact(String countryCode, String number) {
+        Log.d(TAG, "getContact() called with: countryCode = [" + countryCode + "], number = [" + number + "]");
+        return contactsDao.getContact(countryCode, number);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.siddhartho.phonebook.activities;
+package com.siddhartho.phonebook.activities.displaycontacts;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -12,7 +12,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Build;
 import android.os.Bundle;
@@ -39,14 +38,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.siddhartho.phonebook.activities.addcontact.AddContactActivity;
+import com.siddhartho.phonebook.activities.displaycontacts.recyclerview.ContactsRecyclerViewAdapter;
 import com.siddhartho.phonebook.dataclass.CallLogsCount;
 import com.siddhartho.phonebook.utils.Constants;
 import com.siddhartho.phonebook.dataclass.ContactWithContactNumbers;
-import com.siddhartho.phonebook.utils.ContactsBroadcastReceiver;
-import com.siddhartho.phonebook.adapters.ContactsRecyclerViewAdapter;
-import com.siddhartho.phonebook.repository.ContactsRepository;
+import com.siddhartho.phonebook.broadcastreceiver.ContactsBroadcastReceiver;
 import com.siddhartho.phonebook.viewmodel.ContactsViewModel;
-import com.siddhartho.phonebook.databasecomponent.ContactsViewModelFactory;
+import com.siddhartho.phonebook.viewmodel.repository.databasecomponent.ContactsViewModelFactory;
 import com.siddhartho.phonebook.utils.ContentResolverForCallLog;
 import com.siddhartho.phonebook.R;
 import com.siddhartho.phonebook.databinding.ActivityDisplayContactsBinding;
@@ -57,6 +56,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.inject.Inject;
+
+import dagger.android.support.DaggerAppCompatActivity;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -68,7 +70,7 @@ import static android.view.Gravity.END;
 import static com.siddhartho.phonebook.utils.ContactsUtilsKt.callThroughIntent;
 import static com.siddhartho.phonebook.utils.ContactsUtilsKt.showToast;
 
-public class DisplayContactsActivity extends AppCompatActivity {
+public class DisplayContactsActivity extends DaggerAppCompatActivity {
     private static final String TAG = "DisplayContactsActivity";
 
     private ActivityDisplayContactsBinding activityDisplayContactsBinding;
@@ -77,13 +79,26 @@ public class DisplayContactsActivity extends AppCompatActivity {
     private static final String SMS_MESSAGE = "sms_message", SMS_CONTACT = "sms_contact",
             SEARCH_QUERY = "search_query", RECYCLER_VIEW_STATE = "recycler_view_state";
     private String numberClicked;
-    private ArrayList<ContactWithContactNumbers> contactList;
-    private ContactsRecyclerViewAdapter contactsRecyclerViewAdapter;
     private static boolean isBackPressed = false;
     private EditText editTextSms;
 
-    private final CompositeDisposable disposables = new CompositeDisposable();
-    private ContactsBroadcastReceiver contactsBroadcastReceiver;
+    @Inject
+    ContactsViewModelFactory contactsViewModelFactory;
+
+    @Inject
+    CompositeDisposable disposables;
+
+    @Inject
+    ContactsBroadcastReceiver contactsBroadcastReceiver;
+
+    @Inject
+    IntentFilter filter;
+
+    @Inject
+    ContactsRecyclerViewAdapter contactsRecyclerViewAdapter;
+
+    @Inject
+    ArrayList<ContactWithContactNumbers> contactList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,24 +108,16 @@ public class DisplayContactsActivity extends AppCompatActivity {
         setContentView(activityDisplayContactsBinding.getRoot());
         setSupportActionBar(activityDisplayContactsBinding.toolbarDisplayContact);
 
-        registerReceiverNow();
+        registerReceiver(contactsBroadcastReceiver, filter);
 
         setListeners();
 
         contactsViewModel = new ViewModelProvider(this,
-                new ContactsViewModelFactory(new ContactsRepository(this))).get(ContactsViewModel.class);
+                contactsViewModelFactory).get(ContactsViewModel.class);
 
         setRecyclerViewContacts();
 
         goToActionOverlayPermission();
-    }
-
-    private void registerReceiverNow() {
-        Log.d(TAG, "registerReceiverNow() called");
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("android.intent.action.PHONE_STATE");
-        contactsBroadcastReceiver = new ContactsBroadcastReceiver();
-        registerReceiver(contactsBroadcastReceiver, filter);
     }
 
     private void setListeners() {
@@ -137,20 +144,12 @@ public class DisplayContactsActivity extends AppCompatActivity {
                         contactsRecyclerViewAdapter.getFilter().filter(newText);
                     else {
                         showToast(DisplayContactsActivity.this,
-                                getResources().getString(R.string.error_try_again), Toast.LENGTH_SHORT);
+                                R.string.error_try_again, Toast.LENGTH_SHORT);
                         return false;
                     }
                 return true;
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy() called");
-        disposables.dispose();
-        unregisterReceiver(contactsBroadcastReceiver);
     }
 
     @Override
@@ -186,10 +185,16 @@ public class DisplayContactsActivity extends AppCompatActivity {
             showSmsDialog(numberClicked, savedInstanceState.getString(SMS_MESSAGE));
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy() called" + disposables);
+        disposables.dispose();
+        unregisterReceiver(contactsBroadcastReceiver);
+    }
+
     private void setRecyclerViewContacts() {
         Log.d(TAG, "setRecyclerViewContacts() called");
-        contactsRecyclerViewAdapter = new ContactsRecyclerViewAdapter();
-        contactList = new ArrayList<>();
         AtomicReference<ArrayList<ContactWithContactNumbers>> contactListReference = new AtomicReference<>(new ArrayList<>());
 
         activityDisplayContactsBinding.viewScreenDisplayContact.recyclerViewContacts.setLayoutManager(
@@ -220,7 +225,7 @@ public class DisplayContactsActivity extends AppCompatActivity {
                     }
                 }, e -> {
                     Log.e(TAG, "onError: " + e.getMessage(), e);
-                    showToast(this, getResources().getString(R.string.error_loading_contact), Toast.LENGTH_LONG);
+                    showToast(this, R.string.error_loading_contact, Toast.LENGTH_LONG);
                 }, () -> {
                     Log.d(TAG, "onComplete() called");
                     contactsRecyclerViewAdapter.addTrailingViewsAtEnd();
@@ -246,7 +251,7 @@ public class DisplayContactsActivity extends AppCompatActivity {
                         linearLayout.addView(lL);
                     }, e -> {
                         Log.e(TAG, "onReceive -> onError: " + e.getMessage(), e);
-                        showToast(this, getResources().getString(R.string.error_loading_number), Toast.LENGTH_LONG);
+                        showToast(this, R.string.error_loading_number, Toast.LENGTH_LONG);
                     }));
 
         });
@@ -275,7 +280,7 @@ public class DisplayContactsActivity extends AppCompatActivity {
         smsManager.sendTextMessage(number, null, message,
                 PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT"), 0),
                 PendingIntent.getBroadcast(this, 0, new Intent("SMS_DELIVERED"), 0));
-        showToast(this, getResources().getString(R.string.sent_message), Toast.LENGTH_LONG);
+        showToast(this, R.string.sent_message, Toast.LENGTH_LONG);
     }
 
     private void smsDialog(String number, String message) {
@@ -367,12 +372,12 @@ public class DisplayContactsActivity extends AppCompatActivity {
                 .subscribe(() -> {
                             Log.d(TAG, "onComplete() called");
                             contactList.remove(contactWithContactNumbers);
-                            contactsRecyclerViewAdapter.removeContactFromList(position);
-                            showToast(this, getResources().getString(R.string.delete_successful), Toast.LENGTH_SHORT);
+                    contactsRecyclerViewAdapter.removeContactFromList(position);
+                    showToast(this, R.string.delete_successful, Toast.LENGTH_SHORT);
                         }, e -> {
                             Log.e(TAG, "onError: " + e.getMessage(), e);
                             showToast(this,
-                                    getResources().getString(R.string.error_try_again),
+                                    R.string.error_try_again,
                                     Toast.LENGTH_LONG);
                         }
                 )));
@@ -459,7 +464,7 @@ public class DisplayContactsActivity extends AppCompatActivity {
 
     private void goToAddContacts(ContactWithContactNumbers contactWithContactNumbers) {
         Log.d(TAG, "goToAddContacts() called with: contactWithContactNumbers = [" + contactWithContactNumbers + "]");
-        Intent intent = new Intent(this, AddContactsActivity.class);
+        Intent intent = new Intent(this, AddContactActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         if (contactWithContactNumbers != null)
             intent.putExtra(Constants.CONTACT_WITH_NUMBER_KEY, contactWithContactNumbers);
@@ -491,7 +496,7 @@ public class DisplayContactsActivity extends AppCompatActivity {
             super.onBackPressed();
             finishAffinity();
         } else {
-            showToast(this, getResources().getString(R.string.exit), Toast.LENGTH_SHORT);
+            showToast(this, R.string.exit, Toast.LENGTH_SHORT);
             isBackPressed = true;
             new Handler(Looper.getMainLooper()).postDelayed(() -> isBackPressed = false, 1500);
         }
